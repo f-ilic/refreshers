@@ -36,7 +36,7 @@ def update_slider(self):
     zz = (np.abs(xx) ** p + np.abs(yy) ** p) ** (1 / p)
     ax.clear()
     ax.set_title(f"Lp Norms. Contours at {manual_contour}", loc='left')
-    ax.contourf(xx, yy, zz, 90, cmap='Spectral')
+    ax.contourf(xx, yy, zz, 30, cmap='Spectral')
     ax.contour(xx, yy, zz, manual_contour, colors='blue', linewidths=2)
 
 
@@ -49,5 +49,5 @@ slider_p.on_changed(update_slider)
 btn_p_inf.on_clicked(update_with_p_inf)
 
 update_slider(slider_p)  # update manually to load data to display on startup
-plt.ion()
+plt.ioff()
 plt.show()
