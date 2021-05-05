@@ -1,10 +1,8 @@
 import numpy as np
-import matplotlib.pyplot as plt
-
 rng = np.random.RandomState(42)
 
-
-def generate_data_gaussians(means, covariances, num_samples, num_classes):
+def generate_data_gaussians(means, covariances, num_samples):
+    num_classes = len(means)
     samples = np.zeros((num_samples * num_classes, 2))
     labels = np.zeros((num_samples * num_classes))
 
@@ -27,48 +25,25 @@ def generate_donut(mean, sigma, radius, num_samples):
     return samples.T, labels.astype(np.int)
 
 
-def generate_donut_and_gaussian(num_samples=1000):
-    s0, l0 = generate_donut(0, 0.3, 10, num_samples)
-    s1, l1 = generate_data_gaussians([np.array([0,0])], [np.array([[1, 0], [0, 1]])], num_samples, 1)
+def donut_dataset(num_samples=1000):
+    s0, l0 = generate_donut(0, 2, 20, num_samples)
+    s1, l1 = generate_data_gaussians([np.array([7,4])], [np.array([[1, 0], [0, 1]])], num_samples)
 
     samples = np.vstack((s0, s1))
     labels = np.hstack((l0, l1))
 
-    for cls in np.unique(labels):
-        c = samples[labels == cls]
-        # plt.scatter(c[:, 0], c[:, 1])
-
-    return samples, labels
+    return samples.astype(np.float), labels.astype(np.long)
 
 
-def multiple_blobs_dataset():
-    m1 = np.array([-5.0, 2.0])
-    m2 = np.array([1.0, 3.0])
-    m3 = np.array([2.0, -2.0])
-    means = [m1, m2]#, m3]
+def simple_dataset(num_samples=1000):
+    m1 = np.array([-6.0, 1.0])
+    m2 = np.array([1.0, -1.0])
+    means = [m1, m2]
 
-    c1 = np.array([[1, 0], [0, 2]])
-    c2 = np.array([[3, 0], [0, 0.5]])
-    c3 = np.array([[1, 0], [0, 6]])
-    covariances = [c1, c2]#, c3]
+    c1 = np.array([[1, 0], [0, 1]])
+    c2 = np.array([[1, 0], [0, 1]])
+    covariances = [c1, c2]
+    samples, labels = generate_data_gaussians(means, covariances, num_samples)
 
-    num_samples = 100
-    num_classes = 3
+    return samples.astype(np.float), labels.astype(np.long)
 
-    samples, labels = generate_data_gaussians(means, covariances, num_samples, num_classes)
-
-    for cls in range(num_classes):
-        c = samples[labels == cls]
-        # plt.scatter(c[:, 0], c[:, 1])
-    return samples, labels
-    # plt.show()
-
-
-def donut_dataset():
-    samples, labels = generate_donut(0, 0.1, 1, 1000)
-    plt.scatter(samples[:, 0], samples[:, 1])
-    # plt.show()
-
-
-if __name__ == '__main__':
-    generate_donut_and_gaussian()

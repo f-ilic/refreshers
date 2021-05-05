@@ -1,109 +1,100 @@
-# This is a toy example showing the importance of data normalization
-# Model: SimpleLogisticRegression is a model that consists of a linear and a sigmoid layer.
-# Data: 2D points, each a gaussian centered around a different point
-#      - there is an 'easy' dataset (which has 0 mean, unit std)
-#      - there is a 'harder' dataset (does not have 0 mean, unit std)
-
 import torch
 import numpy as np
 import matplotlib.pyplot as plt
-from generate_data import generate_donut_and_gaussian, multiple_blobs_dataset
+from generate_data import simple_dataset, donut_dataset
 from mpl_toolkits.mplot3d import Axes3D
 
+torch.manual_seed(1337)
 
 class SimpleLogisticRegression(torch.nn.Module):
-    def __init__(self, input_dim, output_dim):
+    def __init__(self):
         super(SimpleLogisticRegression, self).__init__()
-        self.linear1 = torch.nn.Linear(input_dim, 3)
+        self.linear1 = torch.nn.Linear(2, 3)
         self.linear2 = torch.nn.Linear(3, 2)
-        self.linear3 = torch.nn.Linear(2, 1)
-        self.activation = torch.nn.Tanh()
-        self.sigmoid = torch.nn.Sigmoid()
-
+        self.activation = torch.nn.ReLU()
+        self.softmax = torch.nn.Softmax(dim=1)
 
     def forward(self, x):
         x = self.linear1(x)
         x = self.activation(x)
         x = self.linear2(x)
         x = self.activation(x)
-
-        x = self.linear3(x)
-        x = self.sigmoid(x)
-        return x
-
-
-def plot_boundary_line(ax, samples, labels, theta, dataset_name):
-    c0 = samples[labels == 0]
-    c1 = samples[labels == 1]
-    ax.plot(c0[:, 0], c0[:, 1])
-    ax.plot(c1[:, 0], c1[:, 1])
-    ax.set_title(dataset_name)
-
-    xmin, xmax = samples[:, 0].min(), samples[:, 0].max()
-    ymin, ymax = samples[:, 1].min(), samples[:, 1].max()
-    plot_x = np.array([xmin, xmax])
-    plot_y = -(plot_x * theta[1] + theta[0]) / theta[2]
-    ax.plot(plot_x, plot_y, 'y-', label='seperation', linewidth=3)
-    ax.set_xlim([xmin, xmax])
-    ax.set_ylim([ymin, ymax])
-
+        return self.softmax(x)
 
 if __name__ == '__main__':
-    input_dim = 2
-    output_dim = 1
-    model = SimpleLogisticRegression(input_dim, output_dim)
+    model = SimpleLogisticRegression()
 
-    NUM_EPOCHS = 1000
-    LR = 0.4
-    SHOW_EVERY = 1000
+    NUM_EPOCHS = 100
+    LR = 0.2
     OPTIMIZER = torch.optim.AdamW(model.parameters(), lr=LR)
     # OPTIMIZER = torch.optim.SGD(model.parameters(), lr=LR)
-    CRITERION = torch.nn.BCELoss()
+    CRITERION = torch.nn.NLLLoss()
 
-    samples, labels = generate_donut_and_gaussian()
-    # samples, labels = multiple_blobs_dataset()
+    # samples, labels = simple_dataset()
+    samples, labels = donut_dataset()
+
     samples = torch.from_numpy(samples).float()
-    labels = torch.from_numpy(labels).float()
-    fig = plt.figure()
-    ax0 = fig.add_subplot(1, 3, 1)
-    ax0.set_title("Input Data")
-    ax1 = fig.add_subplot(1, 3, 2, projection='3d')
-    ax1.set_title("After first Layer f((3x2)*(2xN)+b)")
-    ax2 = fig.add_subplot(1, 3, 3)
-    ax2.set_title("After second Layer f((2x3)*(3xN)+b)")
+    labels = torch.from_numpy(labels).long()
+
+    # normalize
+    # samples = (samples - samples.mean(axis=0)) / samples.std(axis=0)
+
+    fig = plt.figure(figsize=[16, 8])
+    ax0 = fig.add_subplot(2, 4, 1)
+    ax1 = fig.add_subplot(2, 4, 2, projection='3d')
+    ax2 = fig.add_subplot(2, 4, 3)
+    ax3 = fig.add_subplot(2, 4, 4)
+
+    ax4 = fig.add_subplot(2,4,8)
+
     for epoch in range(NUM_EPOCHS):
         OPTIMIZER.zero_grad()
         prediction = model(samples).squeeze()
-        acc = torch.sum((prediction > 0.5).int() == labels)/len(labels)
+        preds = torch.argmax(prediction, dim=1)
+
+        acc = torch.sum(preds == labels)/len(labels)
+        wrong_samples = preds != labels
+
         loss = CRITERION(prediction, labels)
 
-        print(f'loss: {loss.item():.2f}, Accuracy: {acc:.2f}')
+        print(f'[{epoch}] loss: {loss.item():.2f}, Accuracy: {acc:.2f}, #Wrong: {sum(wrong_samples.int())}')
 
         loss.backward()
         OPTIMIZER.step()
 
-        if epoch % SHOW_EVERY == 0:
-            # plt.show(block=False)
-            T1 = model.linear1.weight.detach().cpu()
-            b1 = model.linear1.bias.detach().cpu().T
+    f = model.activation
+    w0 = model.linear1.weight.detach().cpu()
+    b0 = model.linear1.bias.detach().cpu()
 
-            T2 = model.linear2.weight.detach().cpu()
-            b2 = model.linear2.bias.detach().cpu().T
+    w1 = model.linear2.weight.detach().cpu()
+    b1 = model.linear2.bias.detach().cpu()
 
-            f = model.activation
-            sig = model.sigmoid
+    xmin, xmax = samples[:, 0].min(), samples[:, 0].max()
+    ymin, ymax = samples[:, 1].min(), samples[:, 1].max()
 
-            x0 = samples.T
-            x1 = f((T1 @ x0) + b1[:, None])
-            x2 = f((T2 @ x1) + b2[:, None])
+    X, Y = np.meshgrid(np.linspace(xmin, xmax, 1000), np.linspace(ymin, ymax, 100))
+    v = torch.stack((torch.from_numpy(X.flatten()),
+                     torch.from_numpy(Y.flatten())), axis=1).float()
+    v_pred = torch.argmax(model.forward(v), dim=1)
 
-            for l in list(torch.unique(labels).int().numpy()):
-                ax0.scatter(x0[:,labels == l][0, :], x0[:,labels == l][1, :])
-                ax1.scatter(x1[:,labels == l][0, :], x1[:,labels == l][1, :],x1[:,labels == l][2, :])
-                ax2.scatter(x2[:,labels == l][0, :], x2[:,labels == l][1, :])
+    for l in list(torch.unique(labels).int().numpy()):
+        ft  = f((w0 @ samples.T) + b0[:,None]).T
+        ft2 = f((w1 @ ft.T)      + b1[:,None]).T
+
+        gt   = samples[labels == l, :]
+        ft   = ft[preds == l, :]
+        pr = model.forward(samples)
+        ft2 = ft2[preds == l, :]
+        pred = samples[preds  == l, :]
+        grid = v[v_pred == l, :]
+
+        ax0.scatter(gt[:, 0], gt[:, 1]);           ax0.set_title('Ground Truth Data')
+        ax1.scatter(ft[:, 0], ft[:, 1], ft[:, 2]); ax1.set_title('layer1: 2x3 transform')
+        ax2.scatter(ft2[:, 0], ft2[:, 1]);         ax2.set_title('layer2: 3x2 transform')
+        ax3.scatter(pred[:, 0], pred[:, 1]);       ax3.set_title('output')
+
+        ax4.scatter(grid[:, 0], grid[:, 1], s=2);       ax4.set_title('Sampled grid')
+
+    plt.show()
 
 
-            fig = plt.gcf()
-            fig.canvas.draw()
-            fig.canvas.flush_events()
-    plt.show(block=True)

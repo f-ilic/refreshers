@@ -53,7 +53,7 @@ def plot_boundary_line(samples, labels, theta, dataset_name):
 
 
 if __name__ == '__main__':
-    dl = DummyDataloader('easy')
+    dl = DummyDataloader('hard')
     input_dim = 2
     output_dim = 1
     model = SimpleLogisticRegression(input_dim, output_dim)
@@ -67,6 +67,7 @@ if __name__ == '__main__':
 
     samples = dl.get_data()[0]
     labels = dl.get_data()[1]
+    samples = (samples - samples.mean(axis=0)) / samples.std(axis=0)
 
     for epoch in range(NUM_EPOCHS):
         OPTIMIZER.zero_grad()
