@@ -12,7 +12,10 @@ class SimpleLogisticRegression(torch.nn.Module):
     def __init__(self, activationFn=torch.nn.ReLU):
         super(SimpleLogisticRegression, self).__init__()
         self.linear1 = torch.nn.Linear(2, 3)
-        self.linear2 = torch.nn.Linear(3, 2)
+        self.linear2 = torch.nn.Linear(3, 3)
+        self.linear3 = torch.nn.Linear(3, 10)
+        self.linear4 = torch.nn.Linear(10, 3)
+
         self.activation = activationFn()
         self.softmax = torch.nn.Softmax(dim=1)
 
@@ -21,19 +24,23 @@ class SimpleLogisticRegression(torch.nn.Module):
         x = self.activation(x)
         x = self.linear2(x)
         x = self.activation(x)
+        x = self.linear3(x)
+        x = self.activation(x)
+        x = self.linear4(x)
+        x = self.activation(x)
         return self.softmax(x)
 
 
 if __name__ == '__main__':
     # activationFns = [torch.nn.ReLU, torch.nn.LeakyReLU, torch.nn.Tanh,  torch.nn.ELU, torch.nn.CELU, torch.nn.GELU]
     activationFns = [torch.nn.Tanh, torch.nn.ReLU, torch.nn.LeakyReLU, torch.nn.Sigmoid,  torch.nn.GELU]
-    LRs = [0.25, 0.25, 0.25, 3, 0.3]
+    LRs = [0.14, 0.025, 0.025, 0.3, 0.03]
 
     all_axes = []
 
 
     # samples, labels = simple_dataset()
-    samples, labels = donut_dataset(num_classes=2)
+    samples, labels = donut_dataset(num_classes=3)
     # samples, labels = moon_dataset()
 
     samples = torch.from_numpy(samples).float()
@@ -65,10 +72,10 @@ if __name__ == '__main__':
         model = model.cuda()
         d[activationFn.__name__] = []
 
-        NUM_EPOCHS = 100
-        SAVE_EVERY = 3
+        NUM_EPOCHS = 10000
+        SAVE_EVERY = 1000
         LR = LRs[numfn]
-        OPTIMIZER = torch.optim.AdamW(model.parameters(), lr=LR)
+        OPTIMIZER = torch.optim.AdamW(model.parameters())#, lr=LR)
         # OPTIMIZER = torch.optim.SGD(model.parameters(), lr=LR)
         CRITERION = torch.nn.NLLLoss().cuda()
         print(f'-------- {activationFn.__name__} ---------')
@@ -152,8 +159,8 @@ if __name__ == '__main__':
             epoch_dict = d[activationFn.__name__][epoch]
 
             v_pred = epoch_dict['v_pred']
-            tmp = v_pred[:, 0] - v_pred[:, 1]
-            axes[2].contourf(X, Y, tmp.reshape((r1, r2)), cmap="RdYlBu")
+            tmp = v_pred
+
 
             ft_l = epoch_dict['ft_l']
             ft2_l = epoch_dict['ft2_l']
@@ -163,12 +170,16 @@ if __name__ == '__main__':
             for ft, ft2, gt, pred in zip(ft_l, ft2_l, gt_l, pred_l):
                 axes[0].scatter(ft[:, 0], ft[:, 1], ft[:, 2])
                 axes[0].set_title(f'{activationFn.__name__}')
-                axes[1].scatter(ft2[:, 0], ft2[:, 1])
+                axes[1].scatter(ft2[:, 0], ft2[:, 1], ft2[:, 2])
                 axes[2].scatter(pred[:, 0], pred[:, 1])
+
+                axes[3].contourf(X, Y, tmp[:,0].reshape((r1, r2)), cmap="RdYlBu")
+                axes[4].contourf(X, Y, tmp[:,1].reshape((r1, r2)), cmap="RdYlBu")
+                axes[5].contourf(X, Y, tmp[:,2].reshape((r1, r2)), cmap="RdYlBu")
 
         plt.show(block=False)
 
-    fig, ax = plt.subplots(3, len(activationFns))
+    fig, ax = plt.subplots(6, len(activationFns))
     fig.set_size_inches(13, 10)
 
     axepoch = plt.axes([0.2, 0.95, 0.65, 0.03])
@@ -178,7 +189,9 @@ if __name__ == '__main__':
 
     for i in range(len(activationFns)):
         ax[0][i].remove()
-        ax[0][i] = fig.add_subplot(4, len(activationFns), i + 1, projection='3d')
+        ax[1][i].remove()
+        ax[0][i] = fig.add_subplot(6, len(activationFns), i + 1, projection='3d')
+        ax[1][i] = fig.add_subplot(6, len(activationFns), len(activationFns)+i+1, projection='3d')
 
     plt.show()
 
