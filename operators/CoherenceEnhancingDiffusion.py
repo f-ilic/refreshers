@@ -4,6 +4,8 @@ from skimage import data
 from skimage.transform import resize
 import numpy as np
 import torch.nn.functional as F
+import math
+from kornia.filters import gaussian_blur2d
 
 def get_Kx(width, height):
     # build gradient x operator, sparse matrix. use Kx.matmul(Image), or Kx.to_dense() to view
@@ -101,6 +103,54 @@ def test_grad_operator():
 
     plt.show()
 
+
 if __name__ == "__main__":
     print("Coherence Enhancing Diffusion with parameters ...")
-    test_grad_operator()
+    # du/dt = div(D ∇u)
+    # D... structure tensor
+    # https://link.springer.com/content/pdf/10.1023/A:1008009714131.pdf
+
+    u = data.camera()
+    width, height = (300, 300)
+    WH = width*height
+
+    u = resize(u, (width, height))
+    u = torch.from_numpy(u).float()
+
+    Kx = get_Kx(width, height)
+    Ky = get_Ky(width, height)
+
+    kernel1_sz, sigma1 = (7, 0.1)
+    kernel2_sz, sigma2 = (3, 0.5)
+
+    u = gaussian_blur2d(u.unsqueeze(0).unsqueeze(0),
+                        (kernel1_sz, kernel1_sz),
+                        (sigma1, sigma1))
+    u_vec = u.reshape((width*height, 1))
+
+    # for t in range(start=0, end=100, step=5):
+    dx = Kx.matmul(u_vec)
+    dy = Ky.matmul(u_vec)
+
+    # ------- compute the entries in the structure tensor
+    # smooth the gradients first so we dont get shit
+    dx = gaussian_blur2d(dx.reshape((1,1,width, height)), (kernel2_sz, kernel2_sz), (sigma2, sigma2)).reshape((WH, 1))
+    dy = gaussian_blur2d(dy.reshape((1,1,width, height)), (kernel2_sz, kernel2_sz), (sigma2, sigma2)).reshape((WH, 1))
+
+    dx2 = dx * dx
+    dy2 = dy * dy
+    dxy = dx * dy
+
+    trace = dx2 + dy2
+    det = (dx2 * dy2) - (dxy * dxy)
+
+    # eigenvalues
+    tmp1 = trace * 1/2
+    tmp2 = ((trace**2)/4 - det)**(1/2)
+
+    lmbda1 =  tmp1 + tmp2
+    lmbda2 =  tmp1 - tmp2
+
+    # eigenvectors
+    v1 = 0
+    v2 = 0
