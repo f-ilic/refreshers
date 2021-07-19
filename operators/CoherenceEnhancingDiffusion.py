@@ -115,7 +115,7 @@ if __name__ == "__main__":
     # https://link.springer.com/content/pdf/10.1023/A:1008009714131.pdf
 
     # u = data.camera()
-    u = np.asarray(Image.open('gandalf.jpg').convert('L'))
+    u = np.asarray(Image.open('lenna.png').convert('L'))
     width, height = (110, 110)
     WH = width * height
 
