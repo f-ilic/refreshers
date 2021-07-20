@@ -28,10 +28,10 @@ class TVDenoise(torch.nn.Module):
         return self.denoised_image
 
 
-# image_path = 'face.jpg'
-image_path = 'water-castle.png'
-# image_path = 'lenna.png'
-# image_path = 'markus.png'
+image_path = 'face.jpg'
+# image_path = 'water-castle.png'
+image_path = 'lenna.png'
+image_path = 'markus.png'
 
 pil_img = Image.open(image_path)
 width, height = pil_img.size
@@ -55,12 +55,12 @@ num_iters = 500
 for i in range(num_iters):
     optimizer.zero_grad()
     loss = tv_denoiser()
-    if i % 25 == 0:
+    if i % 100 == 0:
         print(f"Loss in iteration {i}/{num_iters}: {loss.item():.3f}")
-        denoised_image = torch.clone(tv_denoiser.get_denoised_image())
-        plt.imshow(denoised_image.detach().numpy(), cmap='gray')
-        plt.axis('off')
-        plt.show()
+        # denoised_image = torch.clone(tv_denoiser.get_denoised_image())
+        # plt.imshow(denoised_image.detach().numpy(), cmap='gray')
+        # plt.axis('off')
+        # plt.show()
 
     loss.backward()
     optimizer.step()
