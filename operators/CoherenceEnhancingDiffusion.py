@@ -57,8 +57,14 @@ def get_Ky(width, height):
     Ky = coo_matrix((values, (cols, rows)), shape=(WH,WH))
     return Ky
 
+def test_div_operator():
+    # TODO
+    # transposity test  <Kx, y> = <x, K.T y>
+    pass
+
 
 def test_grad_operator():
+    # transposity test  <Kx, y> = <x, K.T y>
     u = data.camera()
     width, height = (300, 300)
     u = resize(u, (width, height))

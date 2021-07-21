@@ -39,14 +39,14 @@ width, height = pil_img.size
 reference_image = PILToTensor()(pil_img.resize((width//2, height//2)).convert('L')).squeeze().float() / 255
 
 # Denoising
-noise = torch.randn_like(reference_image) * 0.5
+noise = torch.randn_like(reference_image) * 0.1
 noisy_image = reference_image + noise
 noisy_image = np.clip(noisy_image, 0.0, 1.0)
 noisy_image = torch.FloatTensor(noisy_image)
 
 # Inpainting
 # mask = torch.FloatTensor(height//2, width//2).uniform_() > 0.5
-# noisy_image = reference_image* mask
+# noisy_image = reference_image * mask
 
 tv_denoiser = TVDenoise(noisy_image, tau=0.0095)
 optimizer = torch.optim.SGD([tv_denoiser.denoised_image], lr=0.1)
