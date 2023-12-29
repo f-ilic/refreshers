@@ -72,7 +72,7 @@ if __name__ == '__main__':
         model = model.cuda()
         d[activationFn.__name__] = []
 
-        NUM_EPOCHS = 10000
+        NUM_EPOCHS = 5000
         SAVE_EVERY = 1000
         LR = LRs[numfn]
         OPTIMIZER = torch.optim.AdamW(model.parameters())#, lr=LR)

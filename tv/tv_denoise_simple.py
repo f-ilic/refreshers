@@ -22,7 +22,7 @@ class TVDenoise(torch.nn.Module):
         self.denoised_image.requires_grad = True
 
     def forward(self):
-        return torch.nn.L1Loss()(self.denoised_image, self.reference_image) + self.tau * R(self.denoised_image)
+        return torch.nn.MSELoss()(self.denoised_image, self.reference_image) + self.tau * R(self.denoised_image)
 
     def get_denoised_image(self):
         return self.denoised_image
@@ -31,7 +31,7 @@ class TVDenoise(torch.nn.Module):
 image_path = 'face.jpg'
 # image_path = 'water-castle.png'
 image_path = 'lenna.png'
-image_path = 'markus.png'
+# image_path = 'markus.png'
 
 pil_img = Image.open(image_path)
 width, height = pil_img.size

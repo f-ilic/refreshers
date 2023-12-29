@@ -21,7 +21,7 @@ class SimpleLogisticRegression(torch.nn.Module):
 
 
 class DummyDataloader:
-    valid_datasets = "easy hard".split(' ')
+    valid_datasets = "easy hard".split(" ")
 
     def __init__(self, dataset=None):
         if dataset not in self.valid_datasets:
@@ -39,28 +39,28 @@ class DummyDataloader:
 def plot_boundary_line(samples, labels, theta, dataset_name):
     c0 = samples[labels == 0]
     c1 = samples[labels == 1]
-    plt.plot(c0[:, 0], c0[:, 1], 'r.')
-    plt.plot(c1[:, 0], c1[:, 1], 'b+')
+    plt.scatter(c0[:, 0], c0[:, 1], c="red", edgecolors="black")
+    plt.scatter(c1[:, 0], c1[:, 1], c="blue", edgecolors="black")
     plt.title(dataset_name)
 
     xmin, xmax = samples[:, 0].min(), samples[:, 0].max()
     ymin, ymax = samples[:, 1].min(), samples[:, 1].max()
     plot_x = np.array([xmin, xmax])
     plot_y = -(plot_x * theta[1] + theta[0]) / theta[2]
-    plt.plot(plot_x, plot_y, 'y-', label='seperation', linewidth=3, alpha=0.4)
+    plt.plot(plot_x, plot_y, "y-", label="seperation", linewidth=3, alpha=0.2)
     plt.xlim([xmin, xmax])
     plt.ylim([ymin, ymax])
 
 
-if __name__ == '__main__':
-    dl = DummyDataloader('hard')
+if __name__ == "__main__":
+    dl = DummyDataloader("easy")
     input_dim = 2
     output_dim = 1
     model = SimpleLogisticRegression(input_dim, output_dim)
 
-    NUM_EPOCHS = 1000
-    LR = 1
-    SHOW_EVERY = 100
+    NUM_EPOCHS = 100
+    LR = 0.01
+    SHOW_EVERY = 10
     OPTIMIZER = torch.optim.AdamW(model.parameters(), lr=LR)
     # OPTIMIZER = torch.optim.SGD(model.parameters(), lr=LR)
     CRITERION = torch.nn.BCELoss()
@@ -82,10 +82,10 @@ if __name__ == '__main__':
             b = model.linear.bias.detach().cpu()
             w = model.linear.weight.detach().cpu()
             l = torch.cat((torch.tensor([b]), w.flatten())).numpy()
-            plot_boundary_line(samples, labels, l, dl.dataset_name + f' {epoch=}')
+            plot_boundary_line(samples, labels, l, dl.dataset_name + f" {epoch=}")
 
             plt.show(block=False)
-            print(f'loss: {loss.item():.4f}')
+            print(f"loss: {loss.item():.4f}")
             fig = plt.gcf()
             fig.canvas.draw()
             fig.canvas.flush_events()
