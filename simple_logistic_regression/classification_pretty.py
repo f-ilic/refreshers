@@ -37,9 +37,9 @@ class SimpleLogisticRegression(torch.nn.Module):
 
 
 if __name__ == "__main__":
-    # activationFn = torch.nn.ReLU
+    activationFn = torch.nn.ReLU
     # activationFn = torch.nn.GELU
-    activationFn = torch.nn.Tanh
+    # activationFn = torch.nn.Tanh
 
     lr = 0.01
     num_classes = 2  # or 3
@@ -120,7 +120,7 @@ if __name__ == "__main__":
         grid_pred_logits_epoch.append(grid_pred_logits)
 
         # ---- transformation from input -> layer1 -> layer2 -> output ----
-        h0 = f((w0 @ x0.T) + b0[:, None]).T
+        h0 = f((w0 @ v.T) + b0[:, None]).T
         h1 = torch.nn.Softmax(dim=1)(f((w1 @ h0.T) + b1[:, None]).T)
 
         h0_nof = ((w0 @ x0.T) + b0[:, None]).T
@@ -161,17 +161,17 @@ if __name__ == "__main__":
             h0[:, 0],
             h0[:, 1],
             h0[:, 2],
-            c=labels.cpu(),
+            c=grid_pred_logits_epoch[val][:, 1].reshape(r1, r2),
             cmap="plasma",
-            edgecolor="black",
+            # edgecolor="black",
         )
 
         ax2.scatter(
             h1[:, 0],
             h1[:, 1],
-            c=labels.cpu(),
+            c=grid_pred_logits_epoch[val][:, 1].reshape(r1, r2),
             cmap="plasma",
-            edgecolor="black",
+            # edgecolor="black",
             alpha=0.2,
         )
         ax2.set_ylim(-h1.max(), h1.max())
@@ -189,7 +189,7 @@ if __name__ == "__main__":
             X,
             Y,
             grid_pred_logits_epoch[val][:, 1].reshape(r1, r2),
-            colors="k",
+            # colors="k",
             linewidths=3,
             linestyles="dashed",
             # levels=1,
@@ -199,7 +199,7 @@ if __name__ == "__main__":
             h0_nof[:, 0],
             h0_nof[:, 1],
             h0_nof[:, 2],
-            c=labels.cpu(),
+            # c=labels.cpu(),
             cmap="plasma",
             edgecolor="black",
         )
@@ -208,7 +208,7 @@ if __name__ == "__main__":
         ax5.scatter(
             h1_nof[:, 0],
             h1_nof[:, 1],
-            c=labels.cpu(),
+            # c=labels.cpu(),
             cmap="plasma",
             edgecolor="black",
             alpha=0.2,
@@ -223,12 +223,12 @@ if __name__ == "__main__":
         plt.show(block=False)
 
     fig = plt.figure()
-    ax0 = fig.add_subplot(3, 2, 1, aspect="equal")
-    ax3 = fig.add_subplot(3, 2, 2, aspect="equal")
-    ax4 = fig.add_subplot(3, 2, 3, projection="3d", aspect="equal")
-    ax1 = fig.add_subplot(3, 2, 4, projection="3d", aspect="equal")
-    ax2 = fig.add_subplot(3, 2, 6, aspect="equal")
-    ax5 = fig.add_subplot(3, 2, 5, aspect="equal")
+    ax0 = fig.add_subplot(3, 2, 1, aspect="auto")
+    ax3 = fig.add_subplot(3, 2, 2, aspect="auto")
+    ax4 = fig.add_subplot(3, 2, 3, projection="3d", aspect="auto")
+    ax1 = fig.add_subplot(3, 2, 4, projection="3d", aspect="auto")
+    ax2 = fig.add_subplot(3, 2, 6, aspect="auto")
+    ax5 = fig.add_subplot(3, 2, 5, aspect="auto")
 
     # ---- Show the input data ----
     s = samples.cpu()

@@ -64,7 +64,7 @@ def generate_donut(mean, sigma, radius, num_samples):
 
 
 def donut_dataset(num_samples=500, num_classes=2):
-    s0, l0 = generate_donut(0, 1, 12, num_samples)
+    s0, l0 = generate_donut(0, 1, 8, num_samples)
     s1, l1 = generate_data_gaussians(
         [np.array([0, 0])], [np.array([[1, 0], [0, 1]])], num_samples
     )
@@ -74,7 +74,7 @@ def donut_dataset(num_samples=500, num_classes=2):
 
     if num_classes > 2:
         for i in range(num_classes - 2):
-            s, l = generate_donut(0, 1, 12 * (i + 2), num_samples)
+            s, l = generate_donut(0, 1, 8 * (i + 2), num_samples)
             samples = np.vstack((samples, s))
             labels = np.hstack((labels, l * (i + 2)))
 
