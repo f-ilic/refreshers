@@ -25,6 +25,9 @@ class SimpleLogisticRegression(torch.nn.Module):
 
 
 if __name__ == '__main__':
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    print(f'Using device: {device}')
+
     # activationFns = [torch.nn.ReLU, torch.nn.LeakyReLU, torch.nn.Tanh,  torch.nn.ELU, torch.nn.CELU, torch.nn.GELU]
     activationFns = [torch.nn.Tanh, torch.nn.ReLU, torch.nn.LeakyReLU, torch.nn.Sigmoid,  torch.nn.GELU]
     LRs = [0.25, 0.25, 0.25, 3, 0.3]
@@ -56,13 +59,13 @@ if __name__ == '__main__':
         dataax[0].scatter(c[:,0], c[:,1])
     dataax[0].set_title("data to classify")
 
-    samples = torch.Tensor(samples).cuda()
-    labels = torch.Tensor(labels).cuda()
+    samples = torch.Tensor(samples).to(device)
+    labels = torch.Tensor(labels).to(device)
 
     d = {}
     for numfn, activationFn in enumerate(activationFns):
         model = SimpleLogisticRegression(activationFn)
-        model = model.cuda()
+        model = model.to(device)
         d[activationFn.__name__] = []
 
         NUM_EPOCHS = 100
@@ -70,7 +73,7 @@ if __name__ == '__main__':
         LR = LRs[numfn]
         OPTIMIZER = torch.optim.AdamW(model.parameters(), lr=LR)
         # OPTIMIZER = torch.optim.SGD(model.parameters(), lr=LR)
-        CRITERION = torch.nn.NLLLoss().cuda()
+        CRITERION = torch.nn.NLLLoss().to(device)
         print(f'-------- {activationFn.__name__} ---------')
         for epoch in range(NUM_EPOCHS):
             # ---- Actual training of model with different activation functions ----
@@ -104,7 +107,7 @@ if __name__ == '__main__':
                 r1 = r2 = 1000
                 X, Y = np.meshgrid(np.linspace(xmin, xmax, r1), np.linspace(ymin, ymax, r2))
                 v = torch.stack((torch.from_numpy(X.flatten()),
-                                 torch.from_numpy(Y.flatten())), axis=1).float().cuda()
+                                 torch.from_numpy(Y.flatten())), axis=1).float().to(device)
                 v_pred = model.forward(v).detach().cpu()
                 v_out = torch.argmax(v_pred, dim=1)
                 v_pred = v_pred.numpy()
