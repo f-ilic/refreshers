@@ -16,7 +16,7 @@ def generate_data_gaussians(means, covariances, num_samples):
         ] = rng.multivariate_normal(mean, cov, num_samples)
         labels[cls * num_samples : (cls + 1) * num_samples] = np.ones(num_samples) * cls
 
-    return samples, labels.astype(np.int)
+    return samples, labels.astype(int)
 
 
 def swiss_roll(num_classes=2, noise_level=0.2):
@@ -48,7 +48,7 @@ def moon_dataset(num_samples=300):
     samples, labels = datasets.make_moons(
         n_samples=(num_samples, num_samples), noise=0.1, random_state=None
     )
-    return samples.astype(np.float), labels.astype(np.long)
+    return samples.astype(float), labels.astype(np.long)
 
 
 def generate_donut(mean, sigma, radius, num_samples):
@@ -60,8 +60,7 @@ def generate_donut(mean, sigma, radius, num_samples):
 
     samples = np.vstack((x, y))
     labels = np.ones((num_samples))
-    return samples.T, labels.astype(np.int)
-
+    return samples.T, labels.astype(int)
 
 def donut_dataset(num_samples=500, num_classes=2):
     s0, l0 = generate_donut(0, 1, 8, num_samples)
@@ -78,7 +77,7 @@ def donut_dataset(num_samples=500, num_classes=2):
             samples = np.vstack((samples, s))
             labels = np.hstack((labels, l * (i + 2)))
 
-    return samples.astype(np.float), labels.astype(np.long)
+    return samples.astype(float), labels.astype(np.long)
 
 
 def simple_dataset(num_samples=100, num_classes=2):
@@ -99,4 +98,4 @@ def simple_dataset(num_samples=100, num_classes=2):
         covariances = [c1, c2, c3]
     samples, labels = generate_data_gaussians(means, covariances, num_samples)
 
-    return samples.astype(np.float), labels.astype(np.long)
+    return samples.astype(float), labels.astype(np.long)
